@@ -1,0 +1,352 @@
+---
+title: "The comparison of default rate and usage between 2007 and 2019."
+author: Ching-Yu Ting
+format: html
+output: bookdown::html_document2
+toc: false
+editor: visual
+---
+
+```{=html}
+<!This block assists in formatting the title, font size, chart caption, etc.– –>
+<style type="text/css">
+  .title {
+    text-align: left;
+}
+body{ /* Normal  */
+      font-size: 16px;
+      margin: 2.5cm;
+      top: 1.5cm;
+      text-align: justify;
+  }
+  .caption {
+    font-size: big;
+    text-align: center;
+    position: above;
+}
+</style>
+```
+```{css plotly-caption, echo = FALSE}
+/*Include this block if you like the chart caption at the top instead of the bottom.*/
+div.figure {
+  display: table;
+}
+div.figure p {
+  display: table-caption;
+  caption-side: top;
+}
+```
+
+------------------------------------------------------------------------
+
+Q1: We want to see the default rate in time series chart to see the changes of default rate over the years.
+
+By looking at figure \@ref(fig:time-series), we can see the default rate in 2007 Q4 was 0.09133115, which is the highest rate overall. Compared to 2019 Q4, the default rate was 0.002042572, which is much lower than 2007 Q4. We can first take this result due to the financial crisis in 2008, with the reason of Subprime Mortgage. According to the news, there were more than 2.66 million houses of homeowners that are unable to pay their mortgages. The mortgage market experienced a notable decrease in default rates from 2007 to 2019, attributed to improvements following the financial crisis.
+
+Q2: Let's discover the changes of number of borrowers per state between 2007 and 2019.
+
+From the interactive chart \@ref(fig:usmaps-comparison), California has the highest borrowers in both 2007 and 2019. Besides from the borrowers per state, we can see that the number of borrowers in 2019 was nearly 2 times greater than numbers of borrowers in 2007. This suggests sustained demand for mortgages, reflecting economic growth and housing market dynamics.
+
+As we want to see the data clearer, we use the interactive bar chart and scatterplot \@ref(fig:comparison-between-2007-2019) to see the defferent number of borrowers between 2007 and 2019. From this figure and the previous figure \@ref(fig:usmaps-comparison) of us map, we discover that California's number of borrowers in 2019 was 8781, nearly two times greater than 2007 (4434 borrowers). While other states did not have much differences than California between 2007 and 2019. As from the scatter plot, we can see that the relationship between number of borrowers in 2007 and 2019 has a positive relationship.
+
+Q3: How many borrowers whose credit score greater than 700 turned out to be default in different channel during the period?
+
+We use credit score over 700 to represent a good credit score. By using the group bar chart, we find out that borrowers in 2007 \@ref(fig:group-bar-chart1) had higher default rate than borrowers in 2019 \@ref(fig:group-bar-chart2). Calculating manually for the default rate, borrowers with channel used by Broker has the highest default rate with 0.094 in 2007 and 0.002 in 2019. Moreover, people with credit score over 700 increase a lot during the period. Last but not least, we find out that the most channel used by the party that delivered the loan to issuer had changed from Correspondent to Retail. Borrowers with credit scores over 700 exhibited lower default rates in 2019, indicating a shift towards more creditworthy borrowers.
+
+Q4: Discussing the comparison between different purposes' (Cash-out refinance, Refinance, Purchase, Not- Specified) default rates.
+
+The default rate in 2019 \@ref(fig:bar-chart1) is much lower than 2007 \@ref(fig:bar-chart2). Calculating the default rate in different category for Purpose usage, Refinance is the highest in 2007. On the other hand, Purchase has the highest default rate among others in 2019. Despite purchase of purpose used has the highest default rate in 2019, the number, which is 0.003, is way much lower than the overall default rates in 2007.
+
+Q5: We like to discover the comparison with different purpose (Cash- out refinance, Refinance, Purchase, Not- Specified) on loan age.
+
+Based on the boxplot, Cash-out refinance tend to have older average loan ages in 2007 \@ref(fig:box-plot1). On the other hand, category of Purchase tend to have higher average of loan age in 2019 \@ref(fig:box-plot2). Overall, the average loan ages by different purpose in 2019 are shorter than loan ages in 2007.
+
+In summary, the mortgage market has undergone notable transformations over the analyzed period, marked by improvements in default rates, shifts in borrower demographics and loan characteristics, and evolving consumer preferences. These insights are crucial for stakeholders in the mortgage industry to adapt strategies, manage risks, and capitalize on emerging opportunities in the dynamic housing market landscape.
+
+(Word count: 637 )
+
+### Figure Appendix {.unnumbered}
+
+```{r, include = FALSE}
+# This is the code block for tasks that do not generate charts, such as loading data, importing packages, data cleaning, and variable manipulation. 
+# You can include as many of these blocks as needed. 
+# Adding "include = FALSE" will prevent the code block from appearing in the HTML output file.
+# You can use "read_rds" to load in the data.
+library(tidyverse)
+library(gapminder) 
+library(gganimate)
+library(scales)
+library(zoo)
+library(gifski)
+library(GGally)
+library(readxl)
+library(flexdashboard)
+library(shiny)
+library(plotly)
+library(DT)
+library(forecast)
+library(usmap)
+library(covidcast)
+library(patchwork)
+library(bookdown)
+library(ggiraph)
+
+default_rate<- read_csv('default_rate_ts.csv')
+data2007<- read_rds('data_sample_2007Q4.rds')
+data2019<- read_rds('data_sample_2019Q4.rds')
+```
+
+<br>
+
+```{r, echo=FALSE, fig.width=8, fig.height=6}
+default_rate <- default_rate %>%
+  mutate(Date = as.yearqtr(as.Date(Date, format = "%m/%d/%Y")))
+
+filtered_data <- default_rate %>%
+  filter(cycle(Date) == 4)
+
+selected_data <- filtered_data %>%
+  filter(Date == "2007 Q4")
+selected_data1 <- filtered_data %>%
+  filter(Date == "2019 Q4")
+```
+
+```{r time-series, warning= FALSE, echo=FALSE, fig.cap="Changes of default rate in time series"}
+# This is the code block for producing charts. 
+# You can include as many of these blocks as needed. 
+# By adding "echo = FALSE," only the chart and not the code will be included in the output HTML file.
+# To modify the size of your chart, adjust the values of fig.width and fig.height.
+# Use fig.cap to specify the caption for your chart.
+# You can insert a blank line between charts by adding "<br>" below the block.
+default_rate %>%
+  ggplot(aes(x = Date, y = `Default rate`)) +
+  geom_line(color='red') +
+  labs(title = "The changes of default rates")+
+  geom_vline(aes(xintercept = as.numeric(as.yearqtr("2007 Q4"))), lty = 2, color = 'darkblue') +
+  geom_vline(aes(xintercept = as.numeric(as.yearqtr("2019 Q4"))), lty = 2, color = 'darkcyan') +
+  geom_text(x = as.numeric(as.yearqtr("2005 Q4")), y = 0.07, label = '2007 Q4', size=5, col = 'black') +
+  geom_text(x = as.numeric(as.yearqtr("2017 Q4")), y = 0.07, label = '2019 Q4', size=5, col = 'black')
+```
+
+<br>
+
+```{r, echo = FALSE}
+#Discover number of borrowers in the US in 2007 and 2019
+borrowers_per_state <- data2007 %>%
+  group_by(STATE) %>%
+  summarise(NUM_BO = n(), .groups = 'drop') %>%
+  rename(state = STATE)
+
+top_15_2007 <- top_n(borrowers_per_state, 15, NUM_BO)
+top_15_2007
+borrowers_per_state1 <- data2019 %>%
+  group_by(STATE) %>%
+  summarise(NUM_BO = n(), .groups = 'drop') %>%
+  rename(state = STATE)
+
+top_15_2019 <- top_n(borrowers_per_state1, 15, NUM_BO)
+top_15_2019
+
+# Plot the map
+borrowers2007<- plot_usmap(data = borrowers_per_state, values = "NUM_BO") +
+  scale_fill_continuous(name = "Number of Borrowers", 
+                        low = "aliceblue", high = "cornflowerblue", 
+                        guide = guide_colorbar()) +
+  labs(title = "Number of Borrowers per State in 2007")+
+  theme(plot.title = element_text(size=10,hjust=0.5),
+        legend.position = "right",legend.key.size = unit(0.3, 'cm'))
+
+borrowers2019<- plot_usmap(data = borrowers_per_state1, values = "NUM_BO") +
+  scale_fill_continuous(name = "Number of Borrowers", 
+                        low = "aliceblue", high = "cornflowerblue", 
+                        guide = guide_colorbar()) +
+  labs(title = "Number of Borrowers per State in 2007") + 
+  theme(plot.title = element_text(size=10,hjust=0.5),
+        legend.position = "right",legend.key.size = unit(0.3, 'cm'))
+```
+
+```{r usmaps-comparison, echo = FALSE, fig.width=8 ,fig.cap="interactive chart of number of borrowers per state in the US"}
+borrowers2007 + borrowers2019
+```
+
+<br>
+
+```{r, include = FALSE}
+# We will use "ggiraph" package to link the interactive charts
+borrowers_per_state
+borrowers_per_state1
+
+# Add a row of NAs to borrowers_per_state1
+borrowers_per_state1 <- rbind(borrowers_per_state1, rep(NA, ncol(borrowers_per_state1)))
+
+# Now you can combine the data frames
+
+new_df <- data.frame(cbind(borrowers_per_state, borrowers_per_state1))
+new_df
+new_df
+data_select <- new_df %>%
+  top_n(15, NUM_BO)%>%
+  top_n(15, NUM_BO.1)%>%
+  mutate(tooltip = paste(" State: ",state,"\n",
+                      "borrowers 2007: ", NUM_BO,"\n",
+                      " State: ",state.1,"\n",
+                      "borrowers 2019: ", NUM_BO.1, sep=""))
+```
+
+```{r comparison-between-2007-2019, echo = FALSE, fig.width=10, fig.height = 8, fig.cap="Exploring the Correlation Between 2007 and 2019"}
+bar_data2007 <- data_select %>%
+  ggplot(aes(y=state,x=NUM_BO, tooltip= tooltip, data_id = 1:15)) +
+  # data_id need to be same for matching
+  geom_col_interactive(fill='cyan2') + 
+  labs(y = 'State (Top 15 states based on number of borrowers)') +
+  theme_bw()
+
+bar_data2019 <- data_select %>%
+  ggplot(aes(y=state.1,x=NUM_BO.1, tooltip= tooltip, data_id = 1:15)) +
+  geom_col_interactive(fill = 'aquamarine')+
+  labs(y = 'State (Top 15 states based on numberof borrowers)') +
+  theme_bw()
+
+scatterplot <- data_select %>%
+  ggplot(aes(x=NUM_BO, y=NUM_BO.1, tooltip = tooltip, 
+             data_id =  1:15)) +
+  geom_point_interactive(size=5, color = 'orange') +
+  theme_bw() 
+
+
+d_final <- (bar_data2007 + bar_data2019)/ scatterplot #/ scatterplot at the second row
+girafe(print (d_final),
+  options = list(opts_sizing(rescale = FALSE))) 
+
+```
+
+<br>
+
+```{r group-bar-chart1, echo=FALSE, fig.cap= "Default Flag for credit score over 700 in 2007"}
+stack <- data2007 %>%
+  filter(CSCORE_B >= 700) %>%
+  group_by(DEFAULT_FLAG, CHANNEL) %>%
+  summarise(NUM_BO = n(), .groups = 'drop') %>%
+  mutate(DEFAULT_FLAG = as.factor(DEFAULT_FLAG))
+
+ggplot(stack, aes(x = CHANNEL, y = NUM_BO, fill = DEFAULT_FLAG)) +
+  geom_col(width=0.7, position="dodge") +
+  labs(x = "Channel", y = "Number of Borrowers with Credit Score >= 700",title = "Default Flag with credit score exceed 700" , fill = "Default Flag")+
+  geom_text(aes(label=NUM_BO),position = position_dodge(width=0.7), vjust = -0.5, hjust = 0.5)+
+  scale_y_continuous(limits = c(0,20000))
+```
+
+```{r group-bar-chart2, echo=FALSE, fig.cap="Default Flag for credit score over 700 in 2019"}
+stack1 <- data2019 %>%
+  filter(CSCORE_B >= 700) %>%
+  group_by(DEFAULT_FLAG, CHANNEL) %>%
+  summarise(NUM_BO = n(), .groups = 'drop') %>%
+  mutate(DEFAULT_FLAG = as.factor(DEFAULT_FLAG))
+
+ggplot(stack1, aes(x = CHANNEL, y = NUM_BO, fill = DEFAULT_FLAG)) +
+  geom_col(width=0.7, position="dodge") +
+  labs(x = "Channel", y = "Number of Borrowers with Credit Score >= 700",title = "Default Flag with credit score exceed 700 in 2019", fill = "Default Flag")+
+  geom_text(aes(label=NUM_BO),position = position_dodge(width=0.7), vjust = -0.5, hjust = 0.5)
+```
+
+<br>
+
+```{r, echo=FALSE}
+# Calculate default rate for loans with purpose 'C'
+cash_loans <- data2007 %>%
+  filter(PURPOSE == 'C')
+cash_default_rate <- mean(cash_loans$DEFAULT_FLAG, na.rm = TRUE)
+cash_default_rate
+# Calculate default rate for loans with purpose 'R'
+refinance_loans <- data2007 %>%
+  filter(PURPOSE == 'R')
+refinance_default_rate <- mean(refinance_loans$DEFAULT_FLAG, na.rm = TRUE)
+refinance_default_rate
+# Calculate default rate for loans with purpose 'P'
+purchase_loans <- data2007 %>%
+  filter(PURPOSE == 'P')
+purchase_default_rate <- mean(purchase_loans$DEFAULT_FLAG, na.rm = TRUE)
+purchase_default_rate
+```
+
+```{r bar-chart1, echo=FALSE, fig.cap="Default rate by purpose in 2007"}
+default_rates1 <- data.frame(
+  Purpose = c('Cash-out refinance', 'Refinance', 'Purchase'),
+  Default_Rate1 = c(cash_default_rate, refinance_default_rate, purchase_default_rate))
+
+# Create a bar plot
+ggplot(default_rates1, aes(y = Purpose, x = Default_Rate1, fill=Purpose)) +
+  geom_col()+
+  theme_minimal() +
+  labs(y = 'Purpose', x = 'Default Rate', title = 'Default Rates by purpose in 2007')+
+  scale_fill_manual(name="",values=c("#66c2a5","#8da0cb","#fc8d62"))
+```
+
+```{r, echo=FALSE}
+# Calculate default rate for loans with purpose 'C'
+cash_loans1 <- data2019 %>%
+  filter(PURPOSE == 'C')
+cash_default_rate1 <- mean(cash_loans1$DEFAULT_FLAG, na.rm = TRUE)
+cash_default_rate1
+# Calculate default rate for loans with purpose 'R'
+refinance_loans1 <- data2019 %>%
+  filter(PURPOSE == 'R')
+refinance_default_rate1 <- mean(refinance_loans1$DEFAULT_FLAG, na.rm = TRUE)
+refinance_default_rate1
+# Calculate default rate for loans with purpose 'P'
+purchase_loans1 <- data2019 %>%
+  filter(PURPOSE == 'P')
+purchase_default_rate1 <- mean(purchase_loans1$DEFAULT_FLAG, na.rm = TRUE)
+purchase_default_rate1
+```
+
+```{r bar-chart2, echo=FALSE, fig.cap="default rate by purpose in 2019"}
+default_rates2 <- data.frame(
+  Purpose1 = c('Cash-out refinance', 'Refinance', 'Purchase'),
+  Default_Rate2 = c(cash_default_rate1, refinance_default_rate1, purchase_default_rate1)
+)
+
+# Create a bar plot
+ggplot(default_rates2, aes(y = Purpose1, x = Default_Rate2, fill = Purpose1)) +
+  geom_col()+
+  theme_minimal() +
+  labs(y = 'Purpose', x = 'Default Rate', title = 'Default Rates by Purpose in 2019')+
+  scale_fill_manual(name="",values=c("#66c2a5","#8da0cb","#fc8d62"))
+```
+
+<br>
+
+```{r box-plot1, warning=FALSE, echo=FALSE, fig.cap= "Different purpose usage with loan age in 2007"}
+set.seed(201)
+data2007 %>%   
+  ggplot(aes(x=PURPOSE,y=LOAN_AGE,col=PURPOSE)) +
+  geom_jitter(width = 0.1, height = 0, stroke=NA, alpha=0.5,size=2) +
+  geom_boxplot(alpha=0.1,outlier.color = NA) + 
+  labs(x="Purpose", y="Loan Age", title = "Loan age in different purpose usage in 2007") +
+  theme_classic() +
+  theme(axis.ticks = element_blank(), # remove ticks
+        legend.position = "bottom",
+        axis.title.x = element_text(face="bold",margin = margin(t = 10)), # x-axis title is too close to axis ticks labels
+        plot.caption = element_text(face="italic"),
+        plot.title = element_text(size=15),
+        panel.grid.major.y = element_line(color="grey90")) + # remove vertical major grid lines on
+   scale_color_brewer(palette = "Paired")
+```
+
+```{r box-plot2, warning=FALSE, echo=FALSE, fig.cap= "Different purpose usage with loan age in 2019"}
+set.seed(201)
+data2019 %>%   
+  ggplot(aes(x=PURPOSE,y=LOAN_AGE,col=PURPOSE)) +
+  geom_jitter(width = 0.1, height = 0, stroke=NA, alpha=0.5,size=2) +
+  geom_boxplot(alpha=0.1, outlier.color = NA) + 
+  labs(x="Purpose", y="Loan Age", title = "Loan age in different purpose usage in 2019") +
+  theme_classic() +
+  theme(axis.ticks = element_blank(), # remove ticks
+        legend.position = "bottom",
+        axis.title.x = element_text(face="bold",margin = margin(t = 10)), # x-axis title is too close to axis ticks labels
+        plot.caption = element_text(face="italic"),
+        plot.title = element_text(size=15),
+        panel.grid.major.y = element_line(color="grey90")) + # remove vertical major grid lines on
+   scale_color_brewer(palette = "Paired")+
+   scale_y_continuous(limits=c(0,200))
+```
